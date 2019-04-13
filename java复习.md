@@ -1,10 +1,8 @@
 equery 和 == 的区别
 
-== 和 Object中的equery是一样的 比较两个内存中的地址值是否一致
+​	== 和 Object中的equery是一样的 比较两个内存中的地址值是否一致
 
-
-
-但是 String中的equery 比较的是 两者之间的内容是否 一模一样
+​	但是 String中的equery 比较的是 两者之间的内容是否 一模一样
 
 
 
@@ -100,9 +98,7 @@ equery 和 == 的区别
 
 
 
-#### 多线程
-
-##### 1）进程和线程
+#### 1）进程和线程
 
 ​		说到进行就要先说到程序
 
@@ -128,7 +124,7 @@ equery 和 == 的区别
 
 
 
-##### 2）并行和并发
+#### 2）并行和并发
 
 ​	并行：多个CPU同时执行多个任务。比如：多个人同时做不同的事情
 
@@ -136,7 +132,7 @@ equery 和 == 的区别
 
 
 
-##### 3）何时需要多线程
+3）何时需要多线程
 
 ​	1：程序需要同时执行两个或多个任务的时候
 
@@ -148,9 +144,11 @@ equery 和 == 的区别
 
 
 
-##### 4）如何创建和使用多线程
+#### 3）如何创建和使用多线程
 
-​	**1：继承 Thread类**，然后重写其中的run方法，之后实例对象，用实例对象.start(); 开启该线程
+##### **1：继承 Thread类**
+
+重写其中的run方法，之后实例对象，用实例对象.start(); 开启该线程
 
 ​		.start(); 作用1：会开启一个线程
 
@@ -162,20 +160,22 @@ equery 和 == 的区别
 
 ​	使用匿名类部类的方式更为简洁
 
-~~~java
+```java
 new Thread(){
   @Override
   public void run(){
    	//需要被该方法调用的方法体
   }
 }.start();
-~~~
+```
 
 
 
-​	**2：实现Runnable接口**，实现其中的run方法
+##### **2：实现Runnable接口**
 
-~~~java
+实现其中的run方法
+
+```java
 /*
 
 	1:实现Runnable接口
@@ -191,13 +191,13 @@ class Thread_test implements Runnable{
     //方法体
   }
 }
-~~~
+```
 
 
 
-3：实现Callable接口
+##### 3：实现Callable接口
 
-~~~java
+```java
 /*
 	相比Runnable，Callable更加强大
 		1）相比run()方法，可以有返回值
@@ -226,11 +226,11 @@ public class test{
     //task.get();	即可 需要try catch
   }
 }
-~~~
+```
 
 
 
-4：使用线程池的方式（开发常用）
+##### 4：使用线程池的方式（开发常用）
 
 ​	概述：提前创建好多个线程，放入线程池中，使用时直接获取，使用完放入池中，可以避免线程频繁的创建和销毁，实现重复利用
 
@@ -268,8 +268,7 @@ public class test{
 
 ​					创建一个线程池，它可安排在给定延迟后运行命令或定期的执行
 
-~~~java
-
+```java
 public class executors{
   public static void main(Stringp[] args){
     //造了一个线程池 内部有10条可重复使用的线程
@@ -281,9 +280,41 @@ public class executors{
   }
 }
 
-~~~
+```
 
+###### 构建线程池的是 强制使用ThreadPoolExecutor
 
+```java
+		//构造一个线程池
+			ThreadPoolExecutor threadPool = new ThreadPoolExecutor(
+							1,1,10,TimeUnit.SECONDS, 
+							new ArrayBlockingQueue<Runnable>(1),
+							new ThreadPoolExecutor.DiscardOldestPolicy());
+			threadPool.execute(() -> {
+		            try {
+		            		handlerMappingSummaryJobRunnable.run();//执行 方法
+		            } catch (Exception e) {
+		            	e.printStackTrace();
+		            }finally{
+	            	threadPool.shutdown();// 关闭线程池
+		            }
+	            });
+            --------------------- 
+            作者：LJHSkyWalker 
+            来源：CSDN 
+            原文：https://blog.csdn.net/qq_31615049/article/details/80756781 
+            
+
+//		    public ThreadPoolExecutor(
+//  				int corePoolSize, - 线程池核心池的大小。
+//                              int maximumPoolSize, - 线程池的最大线程数。
+//                              long keepAliveTime, - 当线程数大于核心时，此为终止前多余的空闲线程等待新任务的最长时间。
+//                              TimeUnit unit, - keepAliveTime 的时间单位。
+//                              BlockingQueue<Runnable> workQueue, - 用来储存等待执行任务的队列。
+//                              ThreadFactory threadFactory, - 线程工厂。
+
+//                              RejectedExecutionHandler handler)  - 拒绝策略
+```
 
 
 
@@ -291,7 +322,7 @@ public class executors{
 
 开发中的实际使用：
 
-​	开发中，优先选择，实现Runnable接口的方式
+​	开发中，优先选择线程池，后实现Runnable接口的方式
 
 ​		原因：
 
@@ -303,9 +334,9 @@ public class executors{
 
 
 
-###### Thread中的常用方法
+##### 线程中的常用方法
 
-~~~java
+```java
 /**
 
 常用方法
@@ -334,7 +365,7 @@ public class executors{
 	setPrioroty(int p);
 	
 */
-~~~
+```
 
 
 
@@ -344,7 +375,7 @@ public class executors{
 
 **方式一：同步代码块**
 
-~~~java
+```java
 public class Thread_test extends Thread{
   
   Object obj = new Object();
@@ -357,11 +388,11 @@ public class Thread_test extends Thread{
     }
   }
 }
-~~~
+```
 
 **方式二：同步方法**
 
-~~~java
+```java
 public static synchronized void test(){
   //被synchronized 包起来的方法 为同步方法 一样是线程安全的
 }
@@ -379,11 +410,11 @@ public synchronized void test1(){
 
 */
 
-~~~
+```
 
 **方式三：Lock锁**
 
-~~~java
+```java
 public class lock_test{
   
 }
@@ -403,7 +434,7 @@ class locktest extends Runnable{
     }
   }
 }
-~~~
+```
 
 
 
@@ -428,6 +459,234 @@ class locktest extends Runnable{
 ​			sleep声明在Thread中，wait声明在Object中
 
 ​			sleep执行后不会释放锁，wait执行后会释放锁
+
+
+
+
+
+#### 4）JDK8中的日期类
+
+为何使用新的日期类 因为是线程安全的
+
+```java
+参考 https://www.jianshu.com/p/2949db9c3df5
+
+Instant：时间戳
+Duration：持续时间，时间差
+LocalDate：只包含日期，比如：2016-10-20
+LocalTime：只包含时间，比如：23:12:10
+LocalDateTime：包含日期和时间，比如：2016-10-20 23:14:21
+Period：时间段
+ZoneOffset：时区偏移量，比如：+8:00
+ZonedDateTime：带时区的时间
+Clock：时钟，比如获取目前美国纽约的时间
+```
+
+```
+	//时间戳	结果：2019-04-13T11:54:50.348Z
+	Instant instant = Instant.now();
+	System.out.println(instant);
+	
+	//时间格式化 结果：2019-04-13 19:54:50
+	DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss");
+	System.out.println(formatter2.format(LocalDateTime.now()));
+```
+
+
+
+
+
+#### 5）Java中计数如何优雅的使用 AtomicInteger
+
+```java
+//以往使用的计数 都是定义一个 int count 然后进行 count++ 的操作
+//但是该种方式是线程不安全的 如果多个线程进行操作，会导致计数错误，所以使用 AtomicInteger
+//AtomicInteger 是线程较为安全的 因为其成员变量为 volatile
+
+AtomicInteger count = new AtomicInteger();
+count.addAndGet(1);		//每次都会自增 传入的数
+count.incrementAndGet();	//该方法自己实现了自增 +1 只需调用即可
+
+```
+
+
+
+
+
+#### 6）相比 AtomicLong 更为高效的 LongAdder
+
+​	分布式的解决方案，原理是 有多个Value可以用于存放，最后在汇总，而AtomicLong只有一个Value，当并发高的时候，该Value失败记录大，且越失败越失败，会以递归的形成增长，导致效率低，而LongAdder使用多个Value，虽然还是会有问题出现，但是大大降低了，所以性能也就高了。
+
+
+
+
+
+#### 7）Java 进行程序运行时间观察
+
+```java
+使用方法：
+	System.currentTimeMillis();	---返回值为Long
+	
+		long startTime = System.currentTimeMillis();
+		for (int i = 0; i < 100000; i++) {
+			...
+		}
+		long endTime = System.currentTimeMillis();
+		System.out.println("时间消耗：" + (endTime - startTime) + "ms");
+```
+
+
+
+
+
+#### 8）Java --- 正则类 Pattern and Matcher
+
+```java
+        Pattern p = Pattern.compile("a*b");
+        Matcher m = p.matcher("aaaaab");
+        boolean b = m.matches();
+        System.out.println(b);	// true
+
+		//下代码等价于上代码
+		System.out.println(Pattern.matches("a*b", "aaaaab"));	// true
+```
+
+
+
+
+
+#### 9）Java --- 判断类 Optional
+
+```java
+常用方法：
+1:	static <T> ofNullable(T value)
+    	--- 如果为非空，返回其描述的值，否则返回空的描述值
+    		比如：传入一个 User 其中如果有值则返回该User对象，如果无值，则返回空的User对象
+2:  boolean ifPresent()
+    	--- 如果值存在，返回true，否则返回false
+3：	T orElse(T t)
+    	--- 如果存在值，返回值，否则返回t
+4：	T orElseGet(Supplier<? extends T> other)
+		--- 如果存在该值，返回值， 否则触发 other，并返回 other 调用的结果
+5：	<X extends Throwable> T orElseThrow(Supplier<? extends X> exceptionSupplier)
+		--- 如果存在该值，返回包含的值，否则抛出由 Supplier 继承的异常
+		
+public class Java8Tester {
+   public static void main(String args[]){
+   
+      Java8Tester java8Tester = new Java8Tester();
+      Integer value1 = null;
+      Integer value2 = new Integer(10);
+        
+      // Optional.ofNullable - 允许传递为 null 参数
+      Optional<Integer> a = Optional.ofNullable(value1);
+        
+      // Optional.of - 如果传递的参数是 null，抛出异常 NullPointerException
+      Optional<Integer> b = Optional.of(value2);
+      System.out.println(java8Tester.sum(a,b));
+   }
+    
+   public Integer sum(Optional<Integer> a, Optional<Integer> b){
+    
+      // Optional.isPresent - 判断值是否存在
+        
+      System.out.println("第一个参数值存在: " + a.isPresent());
+      System.out.println("第二个参数值存在: " + b.isPresent());
+        
+      // Optional.orElse - 如果值存在，返回它，否则返回默认值
+      Integer value1 = a.orElse(new Integer(0));
+        
+      //Optional.get - 获取值，值需要存在
+      Integer value2 = b.get();
+      return value1 + value2;
+   }
+}
+
+上述实例返回结果
+第一个参数值存在: false
+第二个参数值存在: true
+10
+    
+参考地址：http://www.runoob.com/java/java8-optional-class.html
+		https://www.cnblogs.com/zhangboyu/p/7580262.html
+```
+
+
+
+
+
+#### 10）Logger 打印日志注意事项
+
+```tex
+1:对 trace/debug/info 级别的日志输出，必须使用条件输出形式或者使用占位符的方 式。 
+
+说明：logger.debug("Processing trade with id: " + id + " and symbol: " + symbol); 
+
+如果日志级别是 warn，上述日志不会打印，但是会执行字符串拼接操作，如果 symbol 是对象， 会执行 toString()方法，浪费了系统资源，执行了上述操作，最终日志却没有打印。 
+
+正例：（条件） 
+if (logger.isDebugEnabled()) {    
+	logger.debug("Processing trade with id: " + id + " and symbol: " + symbol);   
+}       
+
+正例：（占位符） 
+logger.debug("Processing trade with id: {} and symbol : {} ", id, symbol); 
+
+
+2:避免重复打印日志，浪费磁盘空间，务必在 log4j.xml 中设置 additivity=false。
+ 正例：<logger name="com.taobao.dubbo.config" additivity="false"> 
+ 
+ 
+3:异常信息应该包括两类信息：案发现场信息和异常堆栈信息。如果不处理，那么通过 关键字 throws 往上抛出。 
+正例：logger.error(各类参数或者对象 toString + "_" + e.getMessage(), e); 
+
+
+4:谨慎地记录日志。生产环境禁止输出 debug 日志；有选择地输出 info 日志；如果使 用 warn 来记录刚上线时的业务行为信息，一定要注意日志输出量的问题，避免把服务器磁盘 撑爆，并记得及时删除这些观察日志。 说明：大量地输出无效日志，不利于系统性能提升，也不利于快速定位错误点。记录日志时请 思考：这些日志真的有人看吗？看到这条日志你能做什么？能不能给问题排查带来好处？ 
+
+
+5:可以使用 warn 日志级别来记录用户输入参数错误的情况，避免用户投诉时，无所适 从。注意日志输出的级别，error 级别只记录系统逻辑出错、异常等重要的错误信息。如非必 要，请不要在此场景打出 error 级别
+
+```
+
+
+
+11）Mysql 建组合索引
+
+​	建组合索引的时候，区分度最高的在最左边。 正例：如果 where a=? and b=? ，a 列的几乎接近于唯一值，那么只需要单建 idx_a 索引即 可。 说明：存在非等号和等号混合判断条件时，在建索引时，请把等号条件的列前置。如：where a>? and b=? 那么即使 a 的区分度更高，也必须把 b 放在索引的最前列。 
+
+
+
+
+
+12）Mysql Count(*) 注意事项
+
+​	当某一列的值全是 NULL 时，count(col)的返回结果为 0，但 sum(col)的返回结果为 NULL，因此使用 sum()时需注意 NPE 问题。 
+
+正例：可以使用如下方式来避免 sum 的 NPE 问题：SELECT IF(ISNULL(SUM(g)),0,SUM(g)) FROM table; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
