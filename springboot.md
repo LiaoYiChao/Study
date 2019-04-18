@@ -145,15 +145,15 @@ AMQP：消息队列，常应用于异步处理，应用解耦，流量削峰等
 
 异步处理：
 
-![异步处理](../MyStudy/img/AMQP异步处理解析图.jpg)
+![异步处理](./img/AMQP异步处理解析图.jpg)
 
 服务解耦:
 
-![](../MyStudy/img/AMQP服务解耦.jpg)
+![](./img/AMQP服务解耦.jpg)
 
 流量削峰:
 
-![](../MyStudy/img/AMQP流量削峰.jpg)
+![](./img/AMQP流量削峰.jpg)
 
 ##### RabbitMQ
 
@@ -175,15 +175,15 @@ AMQP：消息队列，常应用于异步处理，应用解耦，流量削峰等
 
     - direct(默认) ---点对点 只有交换机Key 和 路由键Key 完全一致的时候才进行发送
 
-      ![](../MyStudy/img/交换机_direct.jpg)
+      ![](./img/交换机_direct.jpg)
 
     - fanout ---发布订阅式 只要于该类型的交换机进行绑定，都会被发送消息
 
-      ![](../MyStudy/img/交换机_fanout.jpg)
+      ![](./img/交换机_fanout.jpg)
 
     - topic ---发布订阅式 有规定的发布订阅式，类似正则 #.msg ，*.msg 。# 代表一个单词，\* 代表一个或多个单词
 
-      ![](../MyStudy/img/交换机_topic.jpg)
+      ![](./img/交换机_topic.jpg)
 
 - Queue
 
@@ -209,7 +209,7 @@ AMQP：消息队列，常应用于异步处理，应用解耦，流量削峰等
 
   - 虚拟主机
 
-![](../MyStudy/img/消息队列概述图.jpg)
+![](./img/消息队列概述图.jpg)
 
 
 
@@ -1117,7 +1117,7 @@ public class TaskAsyncEmailScheduledApplication {
 - @EnableScheduling      ---开启注解定时任务
   - 需要在启动类上加上该注解，才能自动开始定时任务。
 
-![](../MyStudy/img/定时任务.jpg)
+![](./img/定时任务.jpg)
 
 
 
