@@ -1,5 +1,195 @@
 ### SpringBoot
 
+
+
+#### Spring Pom
+
+使用 Spring io 和 Spring cloud dependencies 进行版本管理 (如下所示 SpringBoot版本 1.5.6 and SpringCloud Edgware)
+
+```java
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.spring.platform</groupId>
+                <artifactId>platform-bom</artifactId>
+                <version>Brussels-SR4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Edgware.RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+```
+
+![](./img/io和cloud版本依赖.jpg)
+
+
+
+
+
+
+
+#### Spring 注解：
+
+##### RESTful 风格
+
+```java
+@GetMapping("/user/{id:\\d+}")
+
+	--- 在url中可以填写正则表达式 进行校验 如上该url需要传入一个 id 并且用正则规定为一个整数。
+```
+
+
+
+##### @RequestParam
+
+```java
+    @GetMapping("/user")
+    public List<User> query(@RequestParam(name = "",defaultValue = "",required = false) String userName){
+    }
+
+	@RequestParm(name=“”,defaultValue="",required="" String userName)
+	name: 指定一个名称 该名称会映射到 后面的参数名 userName上
+	defaultValue: 设定一个默认值
+	required: 是否一定需要传参，当设置为false的时候，可以不传参，为true，必须传参，默认true
+```
+
+
+
+##### @PageableDefault
+
+```java
+@PageableDefault(page = 2,sort = "age ASC",size = 15) Pageable pageable
+	--- 设置默认值
+```
+
+
+
+##### @JsonView
+
+```java
+	根据自身需求显示某些Bean字段
+	
+entity 事例：
+
+@Data
+public class User {
+
+    public interface UserSimpleInterface{};
+
+    public interface UserComplexInterface extends UserSimpleInterface{};
+
+    @JsonView(UserSimpleInterface.class)
+    private String userName;
+
+    @JsonView(UserComplexInterface.class)
+    private Integer age;
+}
+
+controller 事例：
+	
+	//使用JsonView 返回结果 userName字段 age字段并没有
+    @GetMapping("/user")
+    @JsonView(User.UserSimpleInterface.class)
+    public List<User> query(User user, @PageableDefault(page = 2,sort = "age ASC",size = 15) Pageable pageable){
+
+        System.out.println(ReflectionToStringBuilder.toString(user, ToStringStyle.MULTI_LINE_STYLE));
+
+        List<User> list = new ArrayList<User>();
+        list.add(new User());
+        list.add(new User());
+        list.add(new User());
+
+        return list;
+    }
+
+	//返回userName 和 age字段 因为entity中为继承 接口会继承功能
+    @GetMapping("/user/{id:\\d+}")
+    @JsonView(User.UserComplexInterface.class)
+    public User queryOne(@PathVariable Integer id){
+
+        User user = new User();
+        user.setAge(id);
+        user.setUserName("张三");
+        return user;
+
+    }
+```
+
+
+
+
+
+
+
+#### Spring 单元测试
+
+##### SpringBoot 测试用例
+
+```java
+package top.liaoyichao.web;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+/**
+ * @Author: LiaoYiChao
+ * @Date: 2019/4/19 23:30
+ * @Description: User Controller Test
+ */
+@SpringBootTest
+@RunWith(SpringRunner.class)
+public class UserControllerTest {
+
+    private MockMvc mockMvc;
+
+    @Autowired
+    WebApplicationContext wac;
+
+
+    @Before
+    public void set(){
+        mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+    }
+
+
+    @Test
+    public void queryUser() throws Exception{
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/user")
+                .contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3));
+								//表达式 json-path 具体请Github 搜索json-path 查看
+    }
+}
+
+```
+
+
+
+
+
+
+
+
+
 #### Spring Cache
 
 概念  and  缓存注解
