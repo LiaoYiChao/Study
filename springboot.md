@@ -2,6 +2,20 @@
 
 
 
+#### 小技巧
+
+Date 传递：
+
+~~~java
+使用时间戳进行传递，由前端自行决定用那种格式进行显示
+Date date = new Date();
+System.out.Print(date.getTime);
+~~~
+
+
+
+
+
 #### Spring Pom
 
 使用 Spring io 和 Spring cloud dependencies 进行版本管理 (如下所示 SpringBoot版本 1.5.6 and SpringCloud Edgware)
@@ -37,7 +51,7 @@
 
 #### Spring 注解：
 
-##### RESTful 风格
+##### RESTful
 
 ```java
 @GetMapping("/user/{id:\\d+}")
@@ -124,7 +138,528 @@ controller 事例：
 
 
 
+##### @RequestBody
 
+~~~java
+	//该注解，把请求体映射到方法参数上,某个Post请求中代码User需要的JSON串，如果不加该注解，无法映射到User参数上
+	@PostMapper("/user")
+    public User creat(@RequertBody User user){
+        ...
+    }
+~~~
+
+
+
+##### @Valid + @RequestBody + BindingResult联合使用
+
+@Valid + BindingResult类 是Validator中的注解和类 作用校验字段。
+
+如下 @NotBlank ---表示该字段需要一个字符串
+
+​	@Range ---表示一个数字的校验，内部可以传入该数字的大小范围。
+
+~~~java
+   //entity中	---User
+	@NotBlank(message = "用户姓名不能为空")
+    private String userName;
+
+    @Range(min = 0,max = 200,message = "请输入正确的年龄")
+    private Integer age;
+
+    @NotBlank(message = "请输入密码")
+    private String password;
+
+    @MyValidator(message = "测试注解@MyValidator")
+    private String xxx;
+
+
+	//controller 中		---UserController
+	@PostMapping("/user")
+    public User create(@Valid @RequestBody User user , BindingResult result){
+
+        if(result.hasErrors()){
+            result.getAllErrors().forEach(
+                    (error -> System.out.println(error.getDefaultMessage())));
+        }
+
+        return user;
+    }
+~~~
+
+
+
+其余Validator常用注解：
+
+![](./img/Validator-2.jpg)
+
+![](./img/Validator-1.jpg)
+
+
+
+###### 自定义Validator注解：
+
+- 创建一个注解
+- 实现注解对应的逻辑
+
+~~~java
+package top.liaoyichao.validator;
+
+import top.liaoyichao.validator.Constraint.MyConstraintValidator;
+
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * --@Target({ElementType.METHOD,ElementType.FIELD})
+ *      表示可以标注那些之上，如上表示可以标记在方法 和 字段 上
+ *
+ * --@Retention(RetentionPolicy.RUNTIME)
+ *      表示是一个运行时注解
+ * --@Constraint(validatedBy = MyConstraintValidator.class)
+ *		该注解校验 逻辑实现类，标记了该注解会在该类中进行逻辑处理
+ *
+ *	注意事项：
+ *		下方的三个字段，为Validator需要传入的字段，其中 message 为错误消息传递
+ */
+@Target({ElementType.METHOD,ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = MyConstraintValidator.class)
+public @interface MyValidator {
+
+    String message();
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
+
+
+}
+
+~~~
+
+**---自定义注解实现类**
+
+~~~java
+package top.liaoyichao.validator.Constraint;
+
+import top.liaoyichao.validator.MyValidator;
+
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+
+/**
+ *  注意事项:
+ *      在该类中 可以注入任何类，进行操作
+ * -- @Autowired
+ *      xxx xxx
+ */
+public class MyConstraintValidator implements ConstraintValidator<MyValidator,Object> {
+
+    /**
+     * MyValidator 注解初始化校验器
+     * @param constraintAnnotation
+     */
+    @Override
+    public void initialize(MyValidator constraintAnnotation) {
+
+        System.out.println("MyValidator 初始化");
+
+    }
+
+    /**
+     * 校验方法编写 返回true 代表校验通过，返回false代表校验失败
+     * @param value
+     * @param context
+     * @return
+     */
+    @Override
+    public boolean isValid(Object value, ConstraintValidatorContext context) {
+
+        System.out.println("进行校验");
+
+        return false;
+    }
+}
+
+~~~
+
+
+
+
+
+##### @PathVariable
+
+~~~java
+URL 上的参数会被代入被该注解表示的参数上 比如：
+	@GetMapper("user/{id:\\d+}")
+    public User create(@PathVariable Integer id){
+    	...
+	}
+~~~
+
+
+
+
+
+
+
+#### Spring RESTful 拦截机制
+
+- 第一层 Filter
+- 第二层 Interceptor
+- 第三层 ControllerAdvice
+- 第四层 Aspect
+
+![](./img/RESTful拦截顺序图解.jpg)
+
+
+
+##### Filter
+
+- 作用：可以在第一层 过滤某些不合法的请求等等作用
+
+
+
+~~~java
+package top.liaoyichao.filter;
+
+import org.springframework.stereotype.Component;
+
+import javax.servlet.*;
+import java.io.IOException;
+
+/**
+ * @Author: LiaoYiChao
+ * @Date: 2019/4/20 17:06
+ * @Description: Filter 查看执行时间
+ */
+//@Component   --Component 表示直接加入容器中，但是对于第三方的Filter工具 可能不行，所以最佳手动
+public class MyRunTimeFilter implements Filter {
+    //初始化
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        System.out.println("MyRunTimeFilter init");
+    }
+	
+    //拦截后做的处理
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+
+        System.out.println("MyFilter doFilter");
+
+        long creatTime = System.currentTimeMillis();
+
+        //放行
+        filterChain.doFilter(servletRequest, servletResponse);
+
+        System.out.println("总耗时  = " + (System.currentTimeMillis() - creatTime));
+    }
+	
+    //销毁后的处理
+    @Override
+    public void destroy() {
+        System.out.println("MyRunTimeFilter destroy");
+    }
+}
+
+~~~
+
+
+
+##### Interceptor
+
+- 作用：拦截
+
+
+
+~~~java
+package top.liaoyichao.interceptor;
+
+import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * @Author: LiaoYiChao
+ * @Date: 2019/4/20 17:25
+ * @Description: Spring 定义的拦截器 HandlerInterceptor
+ *      主要多了 参数Object o ---通过该参数 可以得到当前那个方法进行的处理，那个类进行的处理
+ */
+@Component
+public class MyRunTimeInterceptor implements HandlerInterceptor {
+
+    /**
+     * 方法执行之前 顺序 1
+     */
+    @Override
+    public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
+
+        HandlerMethod handler = (HandlerMethod) o;
+		
+        //获取当前类名
+        System.out.println(handler.getBean().getClass().getName());
+        //获取当前方法名
+        System.out.println(handler.getMethod().getName());
+
+
+        System.out.println("My RunTime Interceptor PreHandle");
+
+        httpServletRequest.setAttribute("time",System.currentTimeMillis());
+
+        return true;
+    }
+
+    /**
+     * 方法执行之后 顺序 2
+     */
+    @Override
+    public void postHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, ModelAndView modelAndView) throws Exception {
+
+        long time = (long) httpServletRequest.getAttribute("time");
+        System.out.println("post-总耗时"+ (System.currentTimeMillis() - time));
+
+        System.out.println("My RunTime Interceptor PreHandle PostHandle");
+
+    }
+
+    /**
+     * 方法执行之后 顺序 3
+     */
+    @Override
+    public void afterCompletion(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, Exception e) throws Exception {
+
+        long time = (long) httpServletRequest.getAttribute("time");
+        System.out.println("after-总耗时"+ (System.currentTimeMillis() - time));
+
+        System.out.println("My RunTime Interceptor PreHandle AfterHandle");
+
+    }
+}
+
+~~~
+
+
+
+##### Filter 和 Interceptor 注意事项
+
+- 主要关于第三方 Filter 手动加入容器 和 Interceptor 加入拦截器的简单设置
+
+
+
+~~~java
+package top.liaoyichao.web;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import top.liaoyichao.interceptor.MyRunTimeInterceptor;
+import top.liaoyichao.filter.MyRunTimeFilter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @Author: LiaoYiChao
+ * @Date: 2019/4/20 17:13
+ * @Description: 配置 MyRunTimeFilter
+ *      在第三方拦截器不支持 @Component 的时候 需要自行注册该拦截器 使用如下方法进行注册
+ *          和Web.xml 中进行是一样的
+ */
+@Configuration
+public class WebConfig extends WebMvcConfigurerAdapter {
+
+    @Autowired
+    MyRunTimeInterceptor interceptor;
+
+    /**
+     * 加入拦截器
+     * 重写 WebMvcConfigurerAdapter 中的addInterceptors ，添加自定义的拦截器
+     * @param registry
+     */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(interceptor);
+    }
+
+
+    /**
+     * 加入 Filter 入容器
+     * 注册 自定的 or 第三方 Filter 进入组件
+     * @return
+     */
+    @Bean
+    public FilterRegistrationBean timeFilter(){
+
+        FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+        MyRunTimeFilter filter = new MyRunTimeFilter();
+        registrationBean.setFilter(filter);
+
+        //代表拦截所有请求 可以定制拦截某些请求
+        List<String> urlList = new ArrayList<>();
+        urlList.add("/*");
+
+        registrationBean.setUrlPatterns(urlList);
+
+        return registrationBean;
+    }
+
+}
+
+~~~
+
+
+
+##### ControllerAdvice
+
+- 作用：Controller类中的异常处理，当Controller中发生异常，会在这里先进行处理，当这里无法处理的时候，才会往上层抛，如果能处理，直接返回处理结果。
+
+~~~java
+package top.liaoyichao.error.controllerError;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import top.liaoyichao.error.MyUserException;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ *  -- @ControllerAdvice
+ *      标记该注解 表示该类专门处理其他Controller 发生的错误
+ *
+ *  -- @ExceptionHandler(MyUserException.class)
+ *       表示处理那种异常 需要传入一个异常类 这里传入的是一个自定义的异常
+ *
+ *  -- @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+ *       表示出现该中错误后 的返回码 如这里为 500 错误
+ */
+@ControllerAdvice
+public class MyControllerError {
+
+
+    @ExceptionHandler(MyUserException.class)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Map<String,Object> handMyUserException(MyUserException ue){
+
+        Map<String,Object> map = new HashMap<>();
+        map.put("id",ue.getId());
+        map.put("message",ue.getMessage());
+
+        return map;
+
+    }
+
+}
+
+~~~
+
+
+
+- **自定义的异常：**
+
+~~~java
+package top.liaoyichao.error;
+
+import lombok.Data;
+
+/**
+ * @Author: LiaoYiChao
+ * @Date: 2019/4/20 16:23
+ * @Description: 自定义 User 错误
+ */
+@Data
+public class MyUserException extends RuntimeException{
+
+    private Integer id;
+
+    public MyUserException(Integer id){
+        super("User Error");
+        this.id = id;
+    }
+
+
+}
+
+~~~
+
+
+
+##### Aspect
+
+- 作用：切面，很灵活，可以在某些类，某个方法等等，可以在该类执行前，也可执行后等
+
+
+
+~~~java
+package top.liaoyichao.aspect;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.stereotype.Component;
+import top.liaoyichao.error.MyUserException;
+
+/**
+ * @Author: LiaoYiChao
+ * @Date: 2019/4/20 17:49
+ * @Description: My Time Aspect
+ */
+@Aspect
+@Component
+public class TimeAspect {
+	
+    //@Around 环绕通知 在执行前和执行后 都会调用
+    //内部的表达式请看 
+    //https://docs.spring.io/spring/docs/5.1.7.BUILD-SNAPSHOT/spring-framework-reference/core.html#aop
+    @Around("execution(* top.liaoyichao.controller.UserController.*(..))")
+    public Object handlerUserControllerAspect(ProceedingJoinPoint pjp) throws Throwable {
+
+        System.out.println("handlerUserControllerAspect start");
+
+        Object[] args = pjp.getArgs();
+        for (Object arg:args
+             ) {
+            System.out.println("arg is :" + arg);
+        }
+
+        //含义：类似放行
+        Object proceed = pjp.proceed();
+
+        return proceed;
+    }
+	
+    //@AfterThrowing 异常通知 当出现异常的时候进行调用
+    //内部参数 pointcut ---指定该注解关注的位置
+    //			throwing --- 表示发生异常 执行何种异常 如这里执行的为 自定义的异常
+    //			使用throwing 内部的值 需要和传入的参数名称一致
+    @AfterThrowing(pointcut = "execution(* top.liaoyichao.controller.UserController.*(..))",throwing = "ex")
+    public void handlerUserControllerException(MyUserException ex){
+
+        System.out.println("HandlerUserControllerException -------------");
+
+        System.out.println("异常 = " + ex);
+    }
+}
+
+~~~
+
+![](./img/aspect.jpg)
 
 
 
