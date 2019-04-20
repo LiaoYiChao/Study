@@ -190,9 +190,9 @@ controller 事例：
 
 其余Validator常用注解：
 
-![](./img/Validator-2.jpg)
+![](./img/validator-2.jpg)
 
-![](./img/Validator-1.jpg)
+![](./img/validator-1.jpg)
 
 
 
